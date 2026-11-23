@@ -1,0 +1,10 @@
+# Core dependencies (phases 1-4).
+# Pinned with ~= so Windows and Linux both get prebuilt wheels
+# (AGENT_PLAN.md §1.1 #12). Install target: the project venv (.venv).
+dnspython~=2.7
+aiohttp~=3.11
+rich~=13.9
+PyYAML~=6.0
+Jinja2~=3.1
+openpyxl~=3.1
+pytest~=8.3

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Project outputs (generated JSON reports)
+data/output/*
+!data/output/.gitkeep
+
+# Scan results (contain recon data of real domains — NEVER publish)
+data/results/
+*.db
+
+# GUI selftest artifacts (screenshots, demo outputs)
+scripts/gui_selftest_shots/
+
+# Secrets / env
+.env
+
+# OS artifacts
+Thumbs.db
+.DS_Store

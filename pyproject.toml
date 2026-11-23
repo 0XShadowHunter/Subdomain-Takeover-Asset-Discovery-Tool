@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "subtake"
+version = "0.1.0"
+description = "Subdomain takeover & asset discovery tool (detect and report only)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "dnspython~=2.7",
+    "aiohttp~=3.11",
+    "rich~=13.9",
+    "PyYAML~=6.0",
+    "Jinja2~=3.1",
+    "openpyxl~=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest~=8.3"]
+
+[project.scripts]
+subtake = "src.cli:main"
+subtake-gui = "src.gui:main"
+
+[tool.setuptools]
+packages = [
+    "src",
+    "src.utils",
+    "src.discovery",
+    "src.resolver",
+    "src.detection",
+    "src.reporting",
+    "src.storage",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

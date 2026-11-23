@@ -1,0 +1,47 @@
+# Global settings — edit freely; CLI flags override these values.
+# API keys are read from environment variables, never stored in this file.
+
+general:
+  # Seconds for DNS queries and network requests.
+  timeout: 10
+  # Parallel workers. 100 is safe under Windows and Linux default limits.
+  concurrency: 100
+  # Explicit public resolvers (never the OS resolver config) so results
+  # match on Windows and Linux. Override with --resolvers.
+  resolvers:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 9.9.9.9
+
+bruteforce:
+  # Default wordlist (relative to the project root).
+  wordlist: data/wordlists/subdomains.txt
+  # Random labels probed to detect wildcard DNS (0 disables detection).
+  wildcard_probe_count: 3
+
+sources:
+  crtsh:
+    enabled: true
+    timeout: 30
+    retries: 2     # crt.sh answers 502 often — retry softens that
+  hackertarget:
+    enabled: true  # passive OSINT API, no key required
+    timeout: 25
+  rapiddns:
+    enabled: true  # passive DNS database, no key required
+    timeout: 25
+  subfinder:
+    enabled: true   # optional binary; skipped with a warning if absent
+    timeout: 60
+  amass:
+    enabled: true
+    timeout: 120
+  assetfinder:
+    enabled: true
+    timeout: 60
+
+# Reserved for later phases (Phase 2/3). API keys come from env vars, e.g.
+# SHODAN_API_KEY / VIRUSTOTAL_API_KEY — never commit keys here.
+api_keys:
+  shodan: ""
+  virustotal: ""
