@@ -1,0 +1,295 @@
+# Service fingerprints for takeover detection.
+# Reference: https://github.com/EdOverflow/can-i-take-over-xyz
+#
+# Fully editable — adding/updating services needs NO code changes (§5 AC).
+#
+# Fields per service:
+#   service:         human-readable name
+#   cname_patterns:  fnmatch patterns the CNAME target must match (required for
+#                    detector 1/2; empty patterns = detector 4 (A-record) only)
+#   fingerprints:    case-insensitive substrings matched against the HTTP
+#                    title + body snippet
+#   nxdomain:        true when a NXDOMAIN target is itself claimable
+#                    (e.g. the target domain can be registered)
+#   status:          vulnerable | edge-case | not-vulnerable
+#                    - vulnerable:     flag with HIGH confidence on match
+#                    - edge-case:      flag with MEDIUM confidence (manual check)
+#                    - not-vulnerable: NEVER flagged (kept here to document why)
+#   severity:        HIGH | MEDIUM | LOW | INFO (CRITICAL reserved for manual review)
+#   references:      links shown in the report
+#   remediation:     advice text (advice only — this tool never modifies anything)
+#
+# detection:
+#   recheck_dns:     re-verify dangling candidates with a second DNS query (§5 FP rule)
+#   enable_dangling_a: detector 4 (best-effort, A-record pages) — disabled by default
+
+detection:
+  recheck_dns: true
+  enable_dangling_a: false
+
+services:
+
+  # ============================ VULNERABLE ============================
+
+  - service: "GitHub Pages"
+    cname_patterns: ["*.github.io"]
+    fingerprints: ["There isn't a GitHub Pages site here."]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages"
+    remediation: "Create the missing GitHub Pages repository/site under the same name, or remove the CNAME record."
+
+  - service: "AWS S3"
+    cname_patterns: ["*.s3.amazonaws.com", "*.s3-website-*.amazonaws.com", "*.s3-website.*.amazonaws.com", "*.s3.dualstack.*.amazonaws.com"]
+    fingerprints: ["NoSuchBucket", "The specified bucket does not exist"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html"
+    remediation: "Re-create the S3 bucket with the same name (same region) or remove the DNS record pointing to it."
+
+  - service: "Heroku"
+    cname_patterns: ["*.herokuapp.com"]
+    fingerprints: ["No such app"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://devcenter.heroku.com/articles/custom-domains"
+    remediation: "Re-create the Heroku app with the same name or remove the DNS record."
+
+  - service: "Azure Web Apps"
+    cname_patterns: ["*.azurewebsites.net", "*.cloudapp.azure.com", "*.azure-mobile.net", "*.cloudapp.net"]
+    fingerprints: ["404 Web Site not found."]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://learn.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-custom-domain"
+    remediation: "Re-create the Azure App Service and re-bind the custom domain, or remove the DNS record."
+
+  - service: "Netlify"
+    cname_patterns: ["*.netlify.app", "*.netlifyglobalcdn.com"]
+    fingerprints: ["Not found"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://docs.netlify.com/domains-https/custom-domains/"
+    remediation: "Create a Netlify site with the same subdomain name or remove the DNS record."
+
+  - service: "Fastly"
+    cname_patterns: ["*.freetls.fastly.net", "*.fastly.net", "*.global.ssl.fastly.net"]
+    fingerprints: ["Fastly error: unknown domain:"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://www.fastly.com/documentation/guides/domains/"
+    remediation: "Re-add the domain to the Fastly service, or remove the DNS record."
+
+  - service: "Surge.sh"
+    cname_patterns: ["*.surge.sh"]
+    fingerprints: ["project not found"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Publish a Surge project with the same subdomain name or remove the DNS record."
+
+  - service: "Bitbucket Cloud"
+    cname_patterns: ["*.bitbucket.io"]
+    fingerprints: ["Repository not found"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Bitbucket repository with the same name or remove the DNS record."
+
+  - service: "Firebase Hosting"
+    cname_patterns: ["*.web.app", "*.firebaseapp.com"]
+    fingerprints: ["Site Not Found"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+      - "https://firebase.google.com/docs/hosting/custom-domains"
+    remediation: "Re-create the Firebase Hosting site with the same name or remove the DNS record."
+
+  - service: "Webflow"
+    cname_patterns: ["*.proxy-01.webflow.io", "*.webflow.io"]
+    fingerprints: ["The page you are looking for doesn't exist or has been moved"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-publish the Webflow project on the same subdomain or remove the DNS record."
+
+  - service: "Ghost.io"
+    cname_patterns: ["*.ghost.io"]
+    fingerprints: ["The thing you were looking for is no longer here, or never was"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "HIGH"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Ghost(Pro) site with the same subdomain or remove the DNS record."
+
+  - service: "Shopify"
+    cname_patterns: ["*.myshopify.com"]
+    fingerprints: ["Sorry, this shop is currently unavailable"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Shopify store with the same myshopify subdomain or remove the DNS record."
+
+  - service: "Zendesk"
+    cname_patterns: ["*.zendesk.com"]
+    fingerprints: ["Help Center Closed", "help center closed"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create/enable the Zendesk help center or remove the DNS record."
+
+  - service: "Tumblr"
+    cname_patterns: ["*.tumblr.com", "domains.tumblr.com"]
+    fingerprints: ["Whatever we were looking for didn't find"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-attach the custom blog in Tumblr settings or remove the DNS record."
+
+  - service: "Helpjuice"
+    cname_patterns: ["*.helpjuice.com"]
+    fingerprints: ["We couldn't find what you were looking for"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Helpjuice knowledge base with the same subdomain or remove the DNS record."
+
+  - service: "Intercom"
+    cname_patterns: ["custom.intercom.help", "*.custom.intercom.help"]
+    fingerprints: ["This page is reserved for artistic dogs!"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Intercom custom domain or remove the DNS record."
+
+  - service: "Readme.io"
+    cname_patterns: ["*.readme.io"]
+    fingerprints: ["Project doesnt exist... yet!"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the readme.io project with the same subdomain or remove the DNS record."
+
+  - service: "Pantheon"
+    cname_patterns: ["*.pantheonsite.io"]
+    fingerprints: ["The gods are wise, but do not know of the site which you seek."]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Pantheon site environment or remove the DNS record."
+
+  - service: "Teamwork"
+    cname_patterns: ["*.teamwork.com"]
+    fingerprints: ["Oops - We didn't find your site."]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Re-create the Teamwork site with the same subdomain or remove the DNS record."
+
+  - service: "Tilda"
+    cname_patterns: ["*.tilda.ws"]
+    fingerprints: ["Please renew your subscription"]
+    nxdomain: false
+    status: "vulnerable"
+    severity: "MEDIUM"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Renew the Tilda project subscription or remove the DNS record."
+
+  # ============================ EDGE CASES ============================
+  # Fingerprint match reports MEDIUM confidence — needs manual verification.
+
+  - service: "Pingdom (public status page)"
+    cname_patterns: ["*.pingdom.com", "stats.pingdom.com"]
+    fingerprints: ["sorry, couldn't find the status page"]
+    nxdomain: false
+    status: "edge-case"
+    severity: "LOW"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "Verify the Pingdom status page manually; remove the DNS record if unused."
+
+  # ========================== NOT VULNERABLE ==========================
+  # Never flagged — kept here to document why (claiming is not possible).
+
+  - service: "CloudFront"
+    cname_patterns: ["*.cloudfront.net"]
+    fingerprints: ["ERROR: The request could not be satisfied", "Bad request"]
+    nxdomain: false
+    status: "not-vulnerable"
+    severity: "INFO"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "N/A — AWS blocks claiming a distribution id; safe to ignore but consider cleanup."
+
+  - service: "Squarespace"
+    cname_patterns: ["*.squarespace.com"]
+    fingerprints: ["Website Expires Soon"]
+    nxdomain: false
+    status: "not-vulnerable"
+    severity: "INFO"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "N/A — not claimable; cleanup only."
+
+  - service: "Vercel"
+    cname_patterns: ["*.vercel.app"]
+    fingerprints: ["DEPLOYMENT_NOT_FOUND"]
+    nxdomain: false
+    status: "not-vulnerable"
+    severity: "INFO"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "N/A — Vercel verifies domain ownership; cleanup only."
+
+  - service: "Unbounce"
+    cname_patterns: ["*.unbouncepages.com"]
+    fingerprints: ["The requested URL was not found on this server."]
+    nxdomain: false
+    status: "not-vulnerable"
+    severity: "INFO"
+    references:
+      - "https://github.com/EdOverflow/can-i-take-over-xyz"
+    remediation: "N/A — not claimable; cleanup only."
