@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subdomain Takeover Report — {{ target }}</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8;
+          --critical:#dc2626; --high:#ef4444; --medium:#f59e0b; --low:#22d3ee; --info:#94a3b8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width:960px; margin:0 auto; padding:32px 20px 60px; }
+  h1 { font-size:1.6rem; margin:0 0 4px; }
+  h2 { font-size:1.2rem; }
+  .meta { color:var(--muted); font-size:.9rem; margin:0 0 14px; }
+  .disclaimer { background:#3b2f14; border:1px solid #a16207; color:#fbbf24; padding:10px 14px; border-radius:8px; font-size:.85rem; }
+  .cards { display:flex; gap:14px; margin:24px 0; flex-wrap:wrap; }
+  .card { flex:1 1 140px; background:var(--card); border-radius:10px; padding:16px; text-align:center; }
+  .card .num { font-size:2rem; font-weight:700; }
+  .card .label { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; }
+  .bars { background:var(--card); border-radius:10px; padding:16px; margin-bottom:24px; }
+  .bar-row { display:flex; align-items:center; gap:10px; margin:6px 0; }
+  .bar-label { width:90px; font-size:.85rem; }
+  .bar-track { flex:1; background:#0b1220; border-radius:6px; overflow:hidden; }
+  .bar-fill { height:14px; border-radius:6px; min-width:2px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; font-size:.9rem; }
+  th, td { padding:10px 12px; text-align:left; border-bottom:1px solid #0b1220; }
+  th { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; }
+  tr:last-child td { border-bottom:none; }
+  .sev { font-weight:700; }
+  .sev.CRITICAL{color:var(--critical)} .sev.HIGH{color:var(--high)} .sev.MEDIUM{color:var(--medium)}
+  .sev.LOW{color:var(--low)} .sev.INFO{color:var(--info)}
+  .detail { background:var(--card); border-radius:10px; padding:16px 18px; margin:12px 0; }
+  .detail h3 { margin:0 0 8px; font-size:1rem; }
+  .detail dt { color:var(--muted); font-size:.75rem; text-transform:uppercase; margin-top:10px; }
+  .detail dd { margin:2px 0 0; font-size:.92rem; }
+  a { color:var(--accent); }
+  .empty { background:var(--card); border-radius:10px; padding:24px; text-align:center; color:var(--muted); }
+  footer { margin-top:32px; color:var(--muted); font-size:.8rem; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Subdomain Takeover Report</h1>
+  <p class="meta">Target <strong>{{ target }}</strong> · Generated {{ generated_at }} · subtake v{{ version }}</p>
+  <p class="disclaimer">⚠️ Advisory output — verify every finding manually before acting. This tool detects and reports only; it never claims, registers, or exploits any resource.</p>
+
+  <div class="cards">
+    <div class="card"><div class="num">{{ summary.total_scanned }}</div><div class="label">Records scanned</div></div>
+    <div class="card"><div class="num" style="color:var(--high)">{{ summary.vulnerable }}</div><div class="label">Vulnerable (HIGH)</div></div>
+    <div class="card"><div class="num" style="color:var(--medium)">{{ summary.by_confidence.MEDIUM or 0 }}</div><div class="label">MEDIUM confidence</div></div>
+    <div class="card"><div class="num" style="color:var(--low)">{{ summary.by_confidence.LOW or 0 }}</div><div class="label">LOW confidence</div></div>
+  </div>
+
+  {% if findings %}
+  <div class="bars">
+    {% for severity, count in severity_counts.items() %}
+    <div class="bar-row">
+      <span class="bar-label sev {{ severity }}">{{ severity }}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ ((count * 100 / findings|length) | round(0)) | int }}%; background:var(--{{ severity|lower }})"></div></div>
+      <span class="bar-label">{{ count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <table>
+    <thead><tr><th>Severity</th><th>Confidence</th><th>Type</th><th>Subdomain</th><th>Service</th></tr></thead>
+    <tbody>
+    {% for f in findings %}
+      <tr><td class="sev {{ f.severity }}">{{ f.severity }}</td><td>{{ f.confidence }}</td><td>{{ f.type }}</td><td>{{ f.subdomain }}</td><td>{{ f.service }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:28px">Finding details</h2>
+  {% for f in findings %}
+  <div class="detail">
+    <h3><span class="sev {{ f.severity }}">[{{ f.severity }}]</span> {{ f.subdomain }} — {{ f.type }} <span style="color:var(--muted)">({{ f.confidence }})</span></h3>
+    <dl>
+      <dt>Service</dt><dd>{{ f.service }}</dd>
+      {% if f.cname_target %}<dt>CNAME target</dt><dd>{{ f.cname_target }}</dd>{% endif %}
+      <dt>Evidence</dt><dd>{{ f.evidence }}</dd>
+      <dt>Remediation</dt><dd>{{ f.remediation }}</dd>
+      {% if f.references %}<dt>References</dt><dd>{% for r in f.references %}<a href="{{ r }}">{{ r }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</dd>{% endif %}
+    </dl>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty">🎉 No takeover findings — every scanned record looks healthy.</div>
+  {% endif %}
+
+  {% if subdomains %}
+  <h2 style="margin-top:28px">🌐 All discovered subdomains ({{ subdomains|length }})</h2>
+  <table>
+    <thead><tr><th>#</th><th>Subdomain</th><th>Sources</th></tr></thead>
+    <tbody>
+    {% for s in subdomains %}
+      <tr><td>{{ loop.index }}</td><td>{{ s.name }}</td><td>{{ s.sources }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <footer>Fingerprints reference: <a href="https://github.com/EdOverflow/can-i-take-over-xyz">can-i-take-over-xyz</a> · Generated by subtake (detect &amp; report only)</footer>
+</div>
+</body>
+</html>
