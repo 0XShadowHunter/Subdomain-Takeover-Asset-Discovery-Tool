@@ -28,3 +28,4 @@ scripts/gui_selftest_shots/
 # OS artifacts
 Thumbs.db
 .DS_Store
+subtake.spec  
